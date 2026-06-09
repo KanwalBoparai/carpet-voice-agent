@@ -404,43 +404,685 @@ async def demo_page():
     return HTMLResponse(html)
 
 
-_CHAT_HTML = """<!doctype html><html><head><meta charset="utf-8">
+_CHAT_HTML = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>__BUSINESS__ — Voice Agent Demo</title>
+<title>__BUSINESS__ — AI Voice Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:640px;margin:0 auto;padding:20px;background:#f4f1ea;color:#2b2b2b}
-  h2{margin:0 0 4px} .sub{color:#7a6f63;margin:0 0 16px;font-size:14px}
-  #log{background:#fff;border:1px solid #e2dccf;border-radius:12px;padding:14px;height:62vh;overflow-y:auto}
-  .row{margin:8px 0;display:flex} .agent{justify-content:flex-start} .you{justify-content:flex-end}
-  .bub{padding:9px 13px;border-radius:14px;max-width:80%;line-height:1.35}
-  .agent .bub{background:#efe7d8} .you .bub{background:#c8643c;color:#fff}
-  .who{font-size:11px;color:#998}
-  form{display:flex;gap:8px;margin-top:12px}
-  input{flex:1;padding:11px;border-radius:10px;border:1px solid #d8d0c0;font-size:15px}
-  button{padding:11px 16px;border:0;border-radius:10px;background:#c8643c;color:#fff;font-size:15px;cursor:pointer}
-  .tag{display:inline-block;background:#2b7a4b;color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;margin-left:6px}
-</style></head><body>
-<h2>🧶 __BUSINESS__ — Voice Agent</h2>
-<p class="sub">Rehearse the call here — same brain that talks on the phone. Type as the customer.</p>
-<div id="log"></div>
-<form id="f"><input id="m" placeholder="Type what the customer says…" autocomplete="off"><button>Send</button></form>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:       #2563EB;
+    --blue-light: #EFF6FF;
+    --blue-dark:  #1D4ED8;
+    --green:      #059669;
+    --green-light:#ECFDF5;
+    --red:        #DC2626;
+    --red-light:  #FEF2F2;
+    --amber:      #D97706;
+    --amber-light:#FFFBEB;
+    --slate-900:  #0F172A;
+    --slate-700:  #334155;
+    --slate-500:  #64748B;
+    --slate-300:  #CBD5E1;
+    --slate-100:  #F1F5F9;
+    --white:      #FFFFFF;
+    --bg:         #F8FAFF;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--slate-900);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── NAV ─────────────────────────────────────────────── */
+  nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--slate-100);
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--slate-900);
+    text-decoration: none;
+  }
+  .nav-logo {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #2563EB, #7C3AED);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 15px;
+  }
+  .nav-badge {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: .3px;
+  }
+
+  /* ── HERO ─────────────────────────────────────────────── */
+  .hero {
+    text-align: center;
+    padding: 56px 24px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(37,99,235,.08) 0%, transparent 70%);
+    top: -200px; left: 50%; transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 7px; height: 7px;
+    background: var(--blue);
+    border-radius: 50%;
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: .4; transform: scale(.7); }
+  }
+  .hero h1 {
+    font-size: clamp(26px, 4vw, 40px);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--slate-900);
+    margin-bottom: 14px;
+  }
+  .hero h1 span { color: var(--blue); }
+  .hero p {
+    font-size: 15px;
+    color: var(--slate-500);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ── MAIN LAYOUT ─────────────────────────────────────── */
+  .layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+    width: 100%;
+    flex: 1;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────────── */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--slate-100);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+
+  .agent-card { text-align: center; padding: 24px 20px; }
+  .agent-avatar {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #2563EB, #7C3AED);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 24px;
+    margin: 0 auto 12px;
+    position: relative;
+  }
+  .agent-avatar::after {
+    content: '';
+    position: absolute;
+    bottom: 2px; right: 2px;
+    width: 14px; height: 14px;
+    background: var(--green);
+    border: 2px solid white;
+    border-radius: 50%;
+  }
+  .agent-name { font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+  .agent-role { font-size: 12px; color: var(--slate-500); margin-bottom: 14px; }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+  }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--slate-500);
+    margin-bottom: 12px;
+  }
+  .deal-box {
+    background: linear-gradient(135deg, #EFF6FF, #F5F3FF);
+    border: 1px solid #DBEAFE;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .deal-pct {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--blue);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .deal-desc {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--slate-700);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .deal-sub {
+    font-size: 11px;
+    color: var(--slate-500);
+    margin-top: 6px;
+  }
+
+  .rule-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .rule-list li {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12px; color: var(--slate-700); line-height: 1.4;
+  }
+  .rule-list .dot {
+    width: 18px; height: 18px; min-width: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    margin-top: 1px;
+  }
+  .dot-green { background: var(--green-light); color: var(--green); }
+  .dot-red   { background: var(--red-light);   color: var(--red);   }
+
+  /* ── CHAT PANEL ──────────────────────────────────────── */
+  .chat-panel {
+    background: var(--white);
+    border: 1px solid var(--slate-100);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    min-height: 560px;
+  }
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--slate-100);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+  }
+  .chat-header-left {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .chat-header-avatar {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #2563EB, #7C3AED);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 16px;
+  }
+  .chat-header-name { font-size: 14px; font-weight: 600; }
+  .chat-header-sub  { font-size: 11px; color: var(--slate-500); }
+  .chat-header-badge {
+    font-size: 11px; font-weight: 600;
+    color: var(--slate-500);
+    background: var(--slate-100);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-behavior: smooth;
+  }
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 4px; }
+
+  .msg { display: flex; gap: 10px; max-width: 82%; }
+  .msg.agent { align-self: flex-start; }
+  .msg.user  { align-self: flex-end; flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 30px; height: 30px; min-width: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    margin-top: 2px;
+  }
+  .msg.agent .msg-avatar { background: linear-gradient(135deg,#2563EB,#7C3AED); color:white; }
+  .msg.user  .msg-avatar { background: var(--slate-100); color: var(--slate-500); }
+
+  .msg-body { display: flex; flex-direction: column; gap: 4px; }
+
+  .msg-name { font-size: 11px; font-weight: 600; color: var(--slate-500); }
+  .msg.user .msg-name { text-align: right; }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.55;
+    word-wrap: break-word;
+  }
+  .msg.agent .bubble {
+    background: var(--blue-light);
+    color: var(--slate-900);
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user .bubble {
+    background: var(--blue);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+
+  .outcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-top: 6px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    width: fit-content;
+  }
+  .outcome-BOOK, .outcome-INTERESTED { background: var(--green-light); color: var(--green); }
+  .outcome-DO_NOT_CALL, .outcome-WRONG_NUMBER { background: var(--red-light); color: var(--red); }
+  .outcome-CALLBACK, .outcome-BAD_TIMING { background: var(--amber-light); color: var(--amber); }
+  .outcome-NOT_INTERESTED, .outcome-END, .outcome-TRANSFER { background: var(--slate-100); color: var(--slate-500); }
+
+  .typing-indicator {
+    display: flex; gap: 4px; align-items: center;
+    padding: 14px 18px;
+    background: var(--blue-light);
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 6px; height: 6px;
+    background: var(--blue);
+    border-radius: 50%;
+    animation: typing 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: .2s; }
+  .typing-dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: .4; }
+    30%            { transform: translateY(-5px); opacity: 1; }
+  }
+
+  .chat-input-area {
+    padding: 16px 20px;
+    border-top: 1px solid var(--slate-100);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--white);
+  }
+  .chat-input-area input {
+    flex: 1;
+    padding: 12px 18px;
+    border: 1.5px solid var(--slate-300);
+    border-radius: 100px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--slate-900);
+    outline: none;
+    transition: border-color .15s;
+    background: var(--bg);
+  }
+  .chat-input-area input:focus { border-color: var(--blue); background: var(--white); }
+  .chat-input-area input::placeholder { color: var(--slate-500); }
+  .send-btn {
+    width: 42px; height: 42px; min-width: 42px;
+    background: var(--blue);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, transform .1s;
+    color: white;
+  }
+  .send-btn:hover { background: var(--blue-dark); }
+  .send-btn:active { transform: scale(.93); }
+  .send-btn svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; }
+
+  .hint-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 0 20px 14px;
+  }
+  .hint {
+    font-size: 11px;
+    color: var(--blue);
+    background: var(--blue-light);
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: background .15s;
+    white-space: nowrap;
+  }
+  .hint:hover { background: #DBEAFE; }
+
+  /* ── RESPONSIVE ──────────────────────────────────────── */
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: row; flex-wrap: wrap; }
+    .sidebar .card { flex: 1 1 220px; }
+    .hero { padding: 36px 20px 28px; }
+    nav { padding: 0 16px; }
+  }
+
+  /* ── CALL ENDED STATE ────────────────────────────────── */
+  .ended-banner {
+    display: none;
+    margin: 16px 20px 0;
+    padding: 12px 16px;
+    background: var(--slate-100);
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--slate-700);
+    text-align: center;
+  }
+  .restart-btn {
+    background: none;
+    border: 1.5px solid var(--blue);
+    color: var(--blue);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 100px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background .15s;
+    display: block;
+    margin: 8px auto 0;
+  }
+  .restart-btn:hover { background: var(--blue-light); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">
+    <div class="nav-logo">🎙</div>
+    <span>__BUSINESS__</span>
+  </a>
+  <span class="nav-badge">Live Call Simulation</span>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">AI Voice Agent</div>
+  <h1>Talk to <span>__AGENT__</span>, our AI Sales Agent</h1>
+  <p>Type as the customer. The same AI brain that runs on real outbound calls will respond — in real time.</p>
+</div>
+
+<!-- MAIN -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="card agent-card">
+      <div class="agent-avatar">🎙</div>
+      <div class="agent-name">__AGENT__</div>
+      <div class="agent-role">AI Sales Agent · __BUSINESS__</div>
+      <div class="status-pill"><span class="status-dot"></span>Online</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Weekend Offer</div>
+      <div class="deal-box">
+        <div class="deal-pct">40%</div>
+        <div class="deal-desc">Off All Carpets</div>
+        <div class="deal-sub">Free in-home measure included</div>
+      </div>
+      <div style="font-size:11px;color:var(--slate-500);text-align:center;">This weekend only · No obligations</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Agent Guardrails</div>
+      <ul class="rule-list">
+        <li><span class="dot dot-green">✓</span>Stays on facts — exactly 40%, no extras</li>
+        <li><span class="dot dot-green">✓</span>Discloses AI when asked</li>
+        <li><span class="dot dot-green">✓</span>Honors do-not-call immediately</li>
+        <li><span class="dot dot-green">✓</span>Books via real calendar availability</li>
+        <li><span class="dot dot-red">✗</span>Never invents prices or terms</li>
+        <li><span class="dot dot-red">✗</span>Never pressures the customer</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="chat-header-avatar">🎙</div>
+        <div>
+          <div class="chat-header-name">__AGENT__ — __BUSINESS__</div>
+          <div class="chat-header-sub">Outbound call simulation</div>
+        </div>
+      </div>
+      <span class="chat-header-badge">Demo Mode</span>
+    </div>
+
+    <div class="chat-messages" id="messages"></div>
+
+    <div class="ended-banner" id="ended-banner">
+      Call ended.
+      <button class="restart-btn" onclick="restart()">Start a new call</button>
+    </div>
+
+    <div class="hint-row" id="hints">
+      <button class="hint" onclick="useHint(this)">What's included?</button>
+      <button class="hint" onclick="useHint(this)">How much will it cost?</button>
+      <button class="hint" onclick="useHint(this)">I'm not interested.</button>
+      <button class="hint" onclick="useHint(this)">Saturday morning works.</button>
+      <button class="hint" onclick="useHint(this)">Remove me from your list.</button>
+    </div>
+
+    <div class="chat-input-area">
+      <input id="input" placeholder="Type what the customer says…" autocomplete="off">
+      <button class="send-btn" onclick="sendMsg()" aria-label="Send">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+
 <script>
-const sid = "web-" + Math.random().toString(36).slice(2);
-const log = document.getElementById('log');
-function add(who, text, cls, action){
-  const r=document.createElement('div'); r.className='row '+cls;
-  const b=document.createElement('div'); b.className='bub';
-  b.innerHTML='<div class="who">'+who+'</div>'+text+(action?'<span class="tag">'+action+'</span>':'');
-  r.appendChild(b); log.appendChild(r); log.scrollTop=log.scrollHeight;
-}
-async function send(message){
-  const r=await fetch('/demo/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({session_id:sid,message:message,name:''})});
-  const d=await r.json(); add('__AGENT__', d.reply, 'agent', d.action);
-}
-document.getElementById('f').onsubmit=async e=>{
-  e.preventDefault(); const m=document.getElementById('m'); const v=m.value.trim();
-  if(!v) return; add('You', v, 'you'); m.value=''; await send(v);
+const SID = 'web-' + Math.random().toString(36).slice(2);
+const AGENT = '__AGENT__';
+let ended = false;
+
+const $msgs    = document.getElementById('messages');
+const $input   = document.getElementById('input');
+const $banner  = document.getElementById('ended-banner');
+const $hints   = document.getElementById('hints');
+
+const OUTCOME_LABELS = {
+  BOOK:'Appointment Booked', INTERESTED:'Interested', CALLBACK:'Callback Requested',
+  NOT_INTERESTED:'Not Interested', DO_NOT_CALL:'Do Not Call', WRONG_NUMBER:'Wrong Number',
+  BAD_TIMING:'Bad Timing', TRANSFER:'Transferred', END:'Call Ended'
 };
-send('');  // agent opens the call
-</script></body></html>"""
+
+function addMsg(who, text, isAgent, action) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + (isAgent ? 'agent' : 'user');
+
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar';
+  avatar.textContent = isAgent ? '🎙' : '👤';
+
+  const body = document.createElement('div');
+  body.className = 'msg-body';
+
+  const name = document.createElement('div');
+  name.className = 'msg-name';
+  name.textContent = isAgent ? AGENT : 'You';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+
+  body.appendChild(name);
+  body.appendChild(bubble);
+
+  if (action && OUTCOME_LABELS[action]) {
+    const badge = document.createElement('div');
+    badge.className = 'outcome-badge outcome-' + action;
+    badge.textContent = OUTCOME_LABELS[action];
+    body.appendChild(badge);
+  }
+
+  wrap.appendChild(avatar);
+  wrap.appendChild(body);
+  $msgs.appendChild(wrap);
+  $msgs.scrollTop = $msgs.scrollHeight;
+}
+
+function showTyping() {
+  const t = document.createElement('div');
+  t.id = 'typing';
+  t.className = 'msg agent';
+  t.innerHTML = \`<div class="msg-avatar">🎙</div>
+    <div class="msg-body">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>\`;
+  $msgs.appendChild(t);
+  $msgs.scrollTop = $msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+async function callAPI(msg) {
+  const res = await fetch('/demo/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: SID, message: msg, name: '' })
+  });
+  return res.json();
+}
+
+async function sendMsg() {
+  if (ended) return;
+  const txt = $input.value.trim();
+  if (!txt) return;
+  addMsg('You', txt, false);
+  $input.value = '';
+  $hints.style.display = 'none';
+  showTyping();
+  const d = await callAPI(txt);
+  removeTyping();
+  addMsg(AGENT, d.reply, true, d.action);
+  const terminal = ['BOOK','INTERESTED','CALLBACK','NOT_INTERESTED','DO_NOT_CALL','WRONG_NUMBER','BAD_TIMING','TRANSFER','END'];
+  if (terminal.includes(d.action)) { ended = true; $banner.style.display = 'block'; $input.disabled = true; }
+}
+
+function useHint(el) {
+  $input.value = el.textContent;
+  $input.focus();
+}
+
+function restart() {
+  ended = false;
+  $msgs.innerHTML = '';
+  $banner.style.display = 'none';
+  $hints.style.display = 'flex';
+  $input.disabled = false;
+  init();
+}
+
+async function init() {
+  showTyping();
+  const d = await callAPI('');
+  removeTyping();
+  addMsg(AGENT, d.reply, true);
+}
+
+$input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
+init();
+</script>
+</body>
+</html>"""
